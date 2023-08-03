@@ -30,13 +30,13 @@ namespace CrossoutStats
         static Resource Electronics = new Resource("Электроника", "Scrap_Epic", "https://crossoutdb.com/api/v1/item/168");
 
         private List<Resource> resources = new List<Resource>() {
-            new Resource("Металлолом", "Scrap_Common", "https://crossoutdb.com/api/v1/item/53"),
-            new Resource("Провода", "Scrap_Rare", "https://crossoutdb.com/api/v1/item/85"),
+            new Resource("Металлолом", "Common", "https://crossoutdb.com/api/v1/item/53"),
+            new Resource("Провода", "=Rare", "https://crossoutdb.com/api/v1/item/85"),
             new Resource("Медь", "Platinum", "https://crossoutdb.com/api/v1/item/43"),
-            new Resource("Бензин", "ResourcePack_Gasoline5", "https://crossoutdb.com/api/v1/item/106"),
+            new Resource("Бензин", "Gasoline5", "https://crossoutdb.com/api/v1/item/106"),
             new Resource("Пластик", "Plastic", "https://crossoutdb.com/api/v1/item/785"),
             new Resource("Аккумуляторы", "Accumulators", "https://crossoutdb.com/api/v1/item/784"),
-            new Resource("Электроника", "Scrap_Epic", "https://crossoutdb.com/api/v1/item/168")
+            new Resource("Электроника", "Epic", "https://crossoutdb.com/api/v1/item/168")
         };
 
         private List<Statistic> statistics = new List<Statistic>();
@@ -60,10 +60,10 @@ namespace CrossoutStats
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private async void Form1_Load(object sender, EventArgs e)
         {
-            //listBox1.Items.AddRange(resourcesNameLog);
-            
+            await ParsePriceAndName();
+            LoadPriceToTextBox();
         }
 
         public async Task ParsePriceAndName()
@@ -165,39 +165,49 @@ namespace CrossoutStats
             listBox1.Items.Clear();
             foreach (Statistic statistic in statistics)
             {
-                string content = $"Date: {statistic.Date} / Time: {statistic.Time} / {statistic.GameResult} / {statistic.Resource}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
+                string content = $"Date: {statistic.Date} / Time: {statistic.Time} / {statistic.GameResult} / {EngResourcesToRu(statistic.Resource)}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
 
-                //listBox1.Items.Add(content);
-
-                if (checkBoxDefeat.Checked)
+                if (!listBox1.Items.Contains(content))
                 {
-                    if(statistic.GameResult == "defeat")
+                    if (checkBoxDefeat.Checked)
                     {
-                        listBox1.Items.Add(content);
+                        if (statistic.GameResult == "defeat")
+                        {
+                            listBox1.Items.Add(content);
+                        }
                     }
-                }
-                if (checkBoxVictory.Checked)
-                {
-                    if (statistic.GameResult == "victory")
+                    if (checkBoxVictory.Checked)
                     {
-                        listBox1.Items.Add(content);
+                        if (statistic.GameResult == "victory")
+                        {
+                            listBox1.Items.Add(content);
+                        }
                     }
-                }
-                if (checkBoxUnfinished.Checked)
-                {
-                    if(statistic.GameResult == "unfinished")
+                    if (checkBoxUnfinished.Checked)
                     {
-                        listBox1.Items.Add(content);
+                        if (statistic.GameResult == "unfinished")
+                        {
+                            listBox1.Items.Add(content);
+                        }
                     }
-                }
-                if (checkBoxfreePlayFinish.Checked)
-                {
-                    if (statistic.GameResult == "freePlayFinish")
+                    if (checkBoxfreePlayFinish.Checked)
                     {
-                        listBox1.Items.Add(content);
+                        if (statistic.GameResult == "freePlayFinish")
+                        {
+                            listBox1.Items.Add(content);
+                        }
                     }
                 }
             }
+        }
+
+        public string EngResourcesToRu(string res)
+        {
+            string text = string.Empty;
+            foreach(Resource resource in resources)
+                if (res == resource.NameLog)
+                    text = resource.NameRu;
+            return text;
         }
 
         static List<string> FindAndCombineGameData(string filePath, string searchString)
