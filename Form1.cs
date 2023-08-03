@@ -31,7 +31,7 @@ namespace CrossoutStats
 
         private List<Resource> resources = new List<Resource>() {
             new Resource("Металлолом", "Common", "https://crossoutdb.com/api/v1/item/53"),
-            new Resource("Провода", "=Rare", "https://crossoutdb.com/api/v1/item/85"),
+            new Resource("Провода", "Rare", "https://crossoutdb.com/api/v1/item/85"),
             new Resource("Медь", "Platinum", "https://crossoutdb.com/api/v1/item/43"),
             new Resource("Бензин", "Gasoline5", "https://crossoutdb.com/api/v1/item/106"),
             new Resource("Пластик", "Plastic", "https://crossoutdb.com/api/v1/item/785"),
