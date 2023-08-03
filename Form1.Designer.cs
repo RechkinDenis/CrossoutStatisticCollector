@@ -60,7 +60,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(84, 23);
             this.button1.TabIndex = 0;
-            this.button1.Text = "button1";
+            this.button1.Text = "Battle Stats";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -190,7 +190,7 @@
             this.comboBox1.Items.AddRange(new object[] {
             "х100",
             "х1000"});
-            this.comboBox1.Location = new System.Drawing.Point(281, 52);
+            this.comboBox1.Location = new System.Drawing.Point(274, 23);
             this.comboBox1.MaxDropDownItems = 2;
             this.comboBox1.MaxLength = 5;
             this.comboBox1.Name = "comboBox1";
@@ -201,7 +201,7 @@
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(239, 55);
+            this.label9.Location = new System.Drawing.Point(232, 26);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(36, 16);
             this.label9.TabIndex = 17;

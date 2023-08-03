@@ -165,7 +165,7 @@ namespace CrossoutStats
             listBox1.Items.Clear();
             foreach (Statistic statistic in statistics)
             {
-                string content = $"{statistic.Time} / {statistic.GameResult} / {statistic.Resource}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
+                string content = $"Date: {statistic.Date} / Time: {statistic.Time} / {statistic.GameResult} / {statistic.Resource}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
 
                 //listBox1.Items.Add(content);
 
@@ -287,7 +287,10 @@ namespace CrossoutStats
                             {
                                 Console.WriteLine("No match found for game result.");
                             }
-                            Statistic statistic = new Statistic(time, gameResult, resource, score, expTotal, countResource);
+
+                            string containingFolderName = logFile.Directory.Name;
+                            DateTime date = ExtractDate(containingFolderName);
+                            Statistic statistic = new Statistic(date.ToString("yyyy-MM-dd"), time, gameResult, resource, score, expTotal, countResource);
                             statistics.Add(statistic);
                         }
                         else
@@ -300,6 +303,18 @@ namespace CrossoutStats
             catch (Exception ex)
             {
                 label1.Text = ex.Message;
+            }
+        }
+
+        static DateTime ExtractDate(string input)
+        {
+            if (DateTime.TryParseExact(input, "yyyy.MM.dd HH.mm.ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new ArgumentException("Invalid date format.");
             }
         }
 
@@ -345,6 +360,7 @@ namespace CrossoutStats
 
     class Statistic
     {
+        public string Date { get; set; }
         public string Time { get; set; }
         public string GameResult { get; set; }
         public string Resource { get; set; }
@@ -353,8 +369,9 @@ namespace CrossoutStats
         public string Exp { get; set; }
         public string Loot { get; set; }
 
-        public Statistic(string time, string gameResult, string resource, string score, string exp, string countResource)
+        public Statistic(string date, string time, string gameResult, string resource, string score, string exp, string countResource)
         {
+            Date = date;
             Time = time;
             GameResult = gameResult;
             Resource = resource;
