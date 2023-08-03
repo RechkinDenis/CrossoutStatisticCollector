@@ -48,9 +48,6 @@ namespace CrossoutStats
         public string playersFileDB = "stat.db";
         public string templateFileDB = "template.db";
         public string gameLog = "game.log";
-        
-        string input1 = "19:45:05.432 | Gameplay statistic. gameResult 'victory'\n19:45:05.432 | Accumulators 5, Glory 35, score 952, expBase 952, expDailyBonus 2.0, expTotal 2856, expBaseFactionTotal 2856, expFactionTotal 2856";
-        string input = "23:20:24.557         | Gameplay statistic. gameResult 'victory'\r\n23:20:24.557         |      Accumulators   4, Glory  31,  score 266, expBase 266, expDailyBonus 2.0, expTotal 798, expBaseFactionTotal 798, expFactionTotal 798";
 
         public string LocalDerictory => AppDomain.CurrentDomain.BaseDirectory;
 
@@ -158,91 +155,151 @@ namespace CrossoutStats
             }
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private void button1_Click(object sender, EventArgs e)
         {
             DeleteFolderRecursively(PathToDuplicate);
             DuplicateFolders(PathToLogsFile, PathToDuplicate);
 
-            await ParsePriceAndName();
-            
-            //foreach(Resource resource in resources)
-            //{
-            //    string content = null;
-            //
-            //    content = $"Имя: {resource.NameRu}/ Цена: {resource.Price}";
-            //
-            //    if(!listBox1.Items.Contains(content)) listBox1.Items.Add(content);
-            //}
-            
-            LoadPriceToTextBox();
+            ReadStatistics(PathToDuplicate);
 
-            // Используем регулярное выражение для поиска времени
-            string timePattern = @"(\d{2}:\d{2}:\d{2}\.\d{3})";
-            Match timeMatch = Regex.Match(input, timePattern);
-
-            if (timeMatch.Success)
-            {
-                string time = timeMatch.Groups[1].Value;
-                Console.WriteLine($"Time: {time}");
-
-                // Используем регулярное выражение для поиска gameResult
-                string gameResultPattern = @"gameResult '([a-zA-Z]+)'";
-                Match gameResultMatch = Regex.Match(input, gameResultPattern);
-
-                string gameResult = string.Empty;
-                string resource = string.Empty;
-                string countResource = string.Empty;
-                string glory = string.Empty;
-                string score = string.Empty;
-                string expTotal = string.Empty;
-
-                if (gameResultMatch.Success)
-                {
-                    gameResult = gameResultMatch.Groups[1].Value;
-                    Console.WriteLine($"Game Result: {gameResult}");
-
-                    // Используем регулярное выражение для поиска статистики
-                    string statsPattern = @"([a-zA-Z\s]+) (\d+)";
-                    MatchCollection statsMatches = Regex.Matches(input, statsPattern);
-
-                    foreach (Match match in statsMatches)
-                    {
-                        string statName = match.Groups[1].Value.Trim();
-                        int statValue = int.Parse(match.Groups[2].Value);
-                        Console.WriteLine($"{statName}: {statValue}");
-
-
-                        foreach(Resource _resource in resources)
-                        {
-                            if (statName == _resource.NameLog) countResource = statValue.ToString();
-                            if (statName == _resource.NameLog) resource = statName;
-                        }
-
-                        if (statName == "Glory") glory = statValue.ToString();
-                        if(statName == "score") score = statValue.ToString();
-                        if(statName == "expTotal") expTotal = statValue.ToString();
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("No match found for game result.");
-                }
-
-                Statistic statistic = new Statistic(time, gameResult, resource , score, expTotal, countResource);
-                statistics.Add(statistic);
-            }
-            else
-            {
-                Console.WriteLine("No match found for time.");
-            }
-
+            listBox1.Items.Clear();
             foreach (Statistic statistic in statistics)
             {
-                string content = string.Empty;
+                string content = $"{statistic.Time} / {statistic.GameResult} / {statistic.Resource}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
 
-                content = $"{statistic.Time} / {statistic.GameResult} / {statistic.Resource}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
+                //listBox1.Items.Add(content);
 
-                listBox1.Items.Add(content);
+                if (checkBoxDefeat.Checked)
+                {
+                    if(statistic.GameResult == "defeat")
+                    {
+                        listBox1.Items.Add(content);
+                    }
+                }
+                if (checkBoxVictory.Checked)
+                {
+                    if (statistic.GameResult == "victory")
+                    {
+                        listBox1.Items.Add(content);
+                    }
+                }
+                if (checkBoxUnfinished.Checked)
+                {
+                    if(statistic.GameResult == "unfinished")
+                    {
+                        listBox1.Items.Add(content);
+                    }
+                }
+                if (checkBoxfreePlayFinish.Checked)
+                {
+                    if (statistic.GameResult == "freePlayFinish")
+                    {
+                        listBox1.Items.Add(content);
+                    }
+                }
+            }
+        }
+
+        static List<string> FindAndCombineGameData(string filePath, string searchString)
+        {
+            List<string> combinedLines = new List<string>();
+
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+
+                for (int i = 0; i < lines.Length - 1; i++)
+                {
+                    if (lines[i].Contains(searchString) && i + 1 < lines.Length)
+                    {
+                        string combinedLine = lines[i] + "\n" + lines[i + 1];
+                        combinedLines.Add(combinedLine);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ошибка: " + ex.Message);
+            }
+
+            return combinedLines;
+        }
+
+
+        private void ReadStatistics(string path)
+        {
+            try
+            {
+                DirectoryInfo logsDirectory = new DirectoryInfo(path);
+                FileInfo[] logFiles = logsDirectory.GetFiles("game.log", SearchOption.AllDirectories);
+
+                foreach (FileInfo logFile in logFiles)
+                {
+                    foreach (string text in FindAndCombineGameData(logFile.FullName, "Gameplay statistic. gameResult"))
+                    {
+                        string timePattern = @"(\d{2}:\d{2}:\d{2}\.\d{3})";
+                        Match timeMatch = Regex.Match(text, timePattern);
+
+                        if (timeMatch.Success)
+                        {
+                            string time = timeMatch.Groups[1].Value;
+                            Console.WriteLine($"Time: {time}");
+
+                            // Используем регулярное выражение для поиска gameResult
+                            string gameResultPattern = @"gameResult '([a-zA-Z]+)'";
+                            Match gameResultMatch = Regex.Match(text, gameResultPattern);
+
+                            string gameResult = string.Empty;
+                            string resource = string.Empty;
+                            string countResource = string.Empty;
+                            string glory = string.Empty;
+                            string score = string.Empty;
+                            string expTotal = string.Empty;
+
+                            if (gameResultMatch.Success)
+                            {
+                                gameResult = gameResultMatch.Groups[1].Value;
+                                Console.WriteLine($"Game Result: {gameResult}");
+
+                                // Используем регулярное выражение для поиска статистики
+                                string statsPattern = @"([a-zA-Z\s]+) (\d+)";
+                                MatchCollection statsMatches = Regex.Matches(text, statsPattern);
+
+                                foreach (Match match in statsMatches)
+                                {
+                                    string statName = match.Groups[1].Value.Trim();
+                                    int statValue = int.Parse(match.Groups[2].Value);
+                                    Console.WriteLine($"{statName}: {statValue}");
+
+
+                                    foreach (Resource _resource in resources)
+                                    {
+                                        if (statName == _resource.NameLog) countResource = statValue.ToString();
+                                        if (statName == _resource.NameLog) resource = statName;
+                                    }
+
+                                    if (statName == "Glory") glory = statValue.ToString();
+                                    if (statName == "score") score = statValue.ToString();
+                                    if (statName == "expTotal") expTotal = statValue.ToString();
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("No match found for game result.");
+                            }
+                            Statistic statistic = new Statistic(time, gameResult, resource, score, expTotal, countResource);
+                            statistics.Add(statistic);
+                        }
+                        else
+                        {
+                            Console.WriteLine("No match found for time.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                label1.Text = ex.Message;
             }
         }
 
@@ -278,14 +335,13 @@ namespace CrossoutStats
                 }
             }
         }
-    }
 
-    /*
-19:45:05.432         | Gameplay statistic. gameResult 'victory'
-19:45:05.432         |      Accumulators   5, Glory  35,  score 952, expBase 952, expDailyBonus 2.0, expTotal 2856, expBaseFactionTotal 2856, expFactionTotal 2856
-19:45:05.432         |      loot: ResourcePack_Gasoline5;
-19:45:05.432         |      quest Weekly_10_Hard_WinsAccumulators: 6 / 12 -> 7 / 12 
-     */
+        private async void buttonParsePrice_Click(object sender, EventArgs e)
+        {
+            await ParsePriceAndName();
+            LoadPriceToTextBox();
+        }
+    }
 
     class Statistic
     {

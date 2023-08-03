@@ -47,11 +47,16 @@
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
+            this.buttonParsePrice = new System.Windows.Forms.Button();
+            this.checkBoxUnfinished = new System.Windows.Forms.CheckBox();
+            this.checkBoxfreePlayFinish = new System.Windows.Forms.CheckBox();
+            this.checkBoxVictory = new System.Windows.Forms.CheckBox();
+            this.checkBoxDefeat = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(281, 82);
+            this.button1.Location = new System.Drawing.Point(418, 247);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(84, 23);
             this.button1.TabIndex = 0;
@@ -205,17 +210,81 @@
             // listBox1
             // 
             this.listBox1.FormattingEnabled = true;
+            this.listBox1.HorizontalScrollbar = true;
             this.listBox1.ItemHeight = 16;
             this.listBox1.Location = new System.Drawing.Point(13, 276);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(813, 324);
+            this.listBox1.Size = new System.Drawing.Size(489, 324);
             this.listBox1.TabIndex = 18;
+            // 
+            // buttonParsePrice
+            // 
+            this.buttonParsePrice.Location = new System.Drawing.Point(121, 23);
+            this.buttonParsePrice.Name = "buttonParsePrice";
+            this.buttonParsePrice.Size = new System.Drawing.Size(105, 23);
+            this.buttonParsePrice.TabIndex = 19;
+            this.buttonParsePrice.Text = "Parse";
+            this.buttonParsePrice.UseVisualStyleBackColor = true;
+            this.buttonParsePrice.Click += new System.EventHandler(this.buttonParsePrice_Click);
+            // 
+            // checkBoxUnfinished
+            // 
+            this.checkBoxUnfinished.AutoSize = true;
+            this.checkBoxUnfinished.Checked = true;
+            this.checkBoxUnfinished.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxUnfinished.Location = new System.Drawing.Point(407, 220);
+            this.checkBoxUnfinished.Name = "checkBoxUnfinished";
+            this.checkBoxUnfinished.Size = new System.Drawing.Size(92, 20);
+            this.checkBoxUnfinished.TabIndex = 20;
+            this.checkBoxUnfinished.Text = "Unfinished";
+            this.checkBoxUnfinished.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxfreePlayFinish
+            // 
+            this.checkBoxfreePlayFinish.AutoSize = true;
+            this.checkBoxfreePlayFinish.Checked = true;
+            this.checkBoxfreePlayFinish.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxfreePlayFinish.Location = new System.Drawing.Point(407, 192);
+            this.checkBoxfreePlayFinish.Name = "checkBoxfreePlayFinish";
+            this.checkBoxfreePlayFinish.Size = new System.Drawing.Size(114, 20);
+            this.checkBoxfreePlayFinish.TabIndex = 21;
+            this.checkBoxfreePlayFinish.Text = "freePlayFinish";
+            this.checkBoxfreePlayFinish.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxVictory
+            // 
+            this.checkBoxVictory.AutoSize = true;
+            this.checkBoxVictory.Checked = true;
+            this.checkBoxVictory.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxVictory.Location = new System.Drawing.Point(407, 138);
+            this.checkBoxVictory.Name = "checkBoxVictory";
+            this.checkBoxVictory.Size = new System.Drawing.Size(68, 20);
+            this.checkBoxVictory.TabIndex = 22;
+            this.checkBoxVictory.Text = "victory";
+            this.checkBoxVictory.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxDefeat
+            // 
+            this.checkBoxDefeat.AutoSize = true;
+            this.checkBoxDefeat.Checked = true;
+            this.checkBoxDefeat.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxDefeat.Location = new System.Drawing.Point(407, 164);
+            this.checkBoxDefeat.Name = "checkBoxDefeat";
+            this.checkBoxDefeat.Size = new System.Drawing.Size(67, 20);
+            this.checkBoxDefeat.TabIndex = 23;
+            this.checkBoxDefeat.Text = "defeat";
+            this.checkBoxDefeat.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1222, 624);
+            this.ClientSize = new System.Drawing.Size(543, 624);
+            this.Controls.Add(this.checkBoxDefeat);
+            this.Controls.Add(this.checkBoxVictory);
+            this.Controls.Add(this.checkBoxfreePlayFinish);
+            this.Controls.Add(this.checkBoxUnfinished);
+            this.Controls.Add(this.buttonParsePrice);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.comboBox1);
@@ -264,6 +333,11 @@
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.Button buttonParsePrice;
+        private System.Windows.Forms.CheckBox checkBoxUnfinished;
+        private System.Windows.Forms.CheckBox checkBoxfreePlayFinish;
+        private System.Windows.Forms.CheckBox checkBoxVictory;
+        private System.Windows.Forms.CheckBox checkBoxDefeat;
     }
 }
 
