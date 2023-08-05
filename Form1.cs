@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
@@ -10,7 +11,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using static CrossoutStats.GameLogsParser;
 
 /*
  * смотри надо делать проверку по времени кста вот шаблон тебе
@@ -39,21 +39,27 @@ namespace CrossoutStats
             new Resource("Электроника", "Epic", "https://crossoutdb.com/api/v1/item/168")
         };
 
-        private List<Statistic> statistics = new List<Statistic>();
+        List<Battle> battles = new List<Battle>();
+        List<ResultProfit> resultProfits = new List<ResultProfit>();
 
-        public int commissionPercentage = 10;// Процент с продажи на рынке
+        string lootGasoline5 = "ResourcePack_Gasoline5";
+        string lootGasoline10 = "ResourcePack_Gasoline10";
+
+        List<Statistic> statistics = new List<Statistic>();
+
+        double commission = 0.1;// Процент с продажи на рынке
 
         enum GameResult { defeat, victory, unfinished, freePlayFinish }
 
-        public string playersFileDB = "stat.db";
-        public string templateFileDB = "template.db";
-        public string gameLog = "game.log";
+        string playersFileDB = "stat.db";
+        string templateFileDB = "template.db";
+        string gameLog = "game.log";
 
-        public string LocalDerictory => AppDomain.CurrentDomain.BaseDirectory;
+        string LocalDerictory => AppDomain.CurrentDomain.BaseDirectory;
 
-        public string PathToDuplicate => $"{LocalDerictory}\\Logs";
+        string PathToDuplicate => $"{LocalDerictory}\\Logs";
 
-        public string PathToLogsFile => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\My Games\Crossout\logs\";
+        string PathToLogsFile => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\My Games\Crossout\logs\";
 
         public Form1()
         {
@@ -91,18 +97,18 @@ namespace CrossoutStats
                             }
                             else
                             {
-                                Console.WriteLine("No data found.");
+                                //Console.WriteLine("No data found.");
                             }
                         }
                         catch (JsonReaderException ex)
                         {
-                            Console.WriteLine("Error parsing JSON: " + ex.Message);
-                            Console.WriteLine("Response body: " + responseBody);
+                            //Console.WriteLine("Error parsing JSON: " + ex.Message);
+                            //Console.WriteLine("Response body: " + responseBody);
                         }
                     }
                     else
                     {
-                        Console.WriteLine("HTTP request failed with status code: " + response.StatusCode);
+                        //Console.WriteLine("HTTP request failed with status code: " + response.StatusCode);
                     }
                 }
             }
@@ -165,52 +171,171 @@ namespace CrossoutStats
             listBox1.Items.Clear();
             foreach (Statistic statistic in statistics)
             {
-                string content = $"Date: {statistic.Date} / Time: {statistic.Time} / {statistic.GameResult} / {EngResourcesToRu(statistic.Resource)}: {statistic.CountResource} / EXP: {statistic.Exp} / Score: {statistic.Score}";
+                string content = $"Дата: {statistic.Date} / Время: {statistic.Time} / Результат: {EngToRu(statistic.GameResult)} / {EngToRu(statistic.Resource)}: {statistic.CountResource} / Опыт: {statistic.Exp} / Очки: {statistic.Score}";
 
                 if (!listBox1.Items.Contains(content))
                 {
                     if (checkBoxDefeat.Checked)
                     {
-                        if (statistic.GameResult == "defeat")
+                        if (statistic.GameResult == GameResult.defeat.ToString())
                         {
                             listBox1.Items.Add(content);
                         }
                     }
                     if (checkBoxVictory.Checked)
                     {
-                        if (statistic.GameResult == "victory")
+                        if (statistic.GameResult == GameResult.victory.ToString())
                         {
                             listBox1.Items.Add(content);
                         }
                     }
                     if (checkBoxUnfinished.Checked)
                     {
-                        if (statistic.GameResult == "unfinished")
+                        if (statistic.GameResult == GameResult.unfinished.ToString())
                         {
                             listBox1.Items.Add(content);
                         }
                     }
                     if (checkBoxfreePlayFinish.Checked)
                     {
-                        if (statistic.GameResult == "freePlayFinish")
+                        if (statistic.GameResult == GameResult.freePlayFinish.ToString())
                         {
                             listBox1.Items.Add(content);
                         }
                     }
                 }
             }
+
+            foreach(Statistic statistic in statistics)
+            {
+                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
+                {
+                    if (statistic.Resource != string.Empty)
+                    {
+                        Battle battl = new Battle(statistic.Date, statistic.Resource, statistic.CountResource);
+                        if (!battles.Contains(battl))
+                        {
+                            battles.Add(battl);
+                        }
+                    }
+                }
+            }
+            double countRes = 0.0;
+            foreach (Battle battle in battles)
+            {
+                countRes += battle.ResourceCount;
+            }
+
+            DateTime startDate = DateTime.Parse("2023-08-01");
+            DateTime endDate = DateTime.Parse("2023-08-05");
+
+            CalculateEarnings(battles, resources, startDate, endDate);
+
+            //Console.WriteLine(countRes.ToString());
         }
 
-        public string EngResourcesToRu(string res)
+        void CalculateEarnings(List<Battle> battles, List<Resource> resourcePrices, DateTime startDate, DateTime endDate)
+        {
+            Dictionary<string, double> earnedResources = new Dictionary<string, double>();
+
+            foreach (Battle battle in battles)
+            {
+                DateTime battleDate = DateTime.Parse(battle.Date);
+
+                if (battleDate >= startDate && battleDate <= endDate)
+                {
+                    Resource resourcePrice = resourcePrices.FirstOrDefault(rp => rp.NameLog == battle.Resource);
+                    if (resourcePrice != null)
+                    {
+                        double resourceValue = battle.ResourceCount;
+                        double roundedValue = Math.Round(resourceValue, 2, MidpointRounding.ToEven);
+
+                        if (earnedResources.ContainsKey(battle.Resource))
+                        {
+                            earnedResources[battle.Resource] += roundedValue;
+                        }
+                        else
+                        {
+                            earnedResources[battle.Resource] = roundedValue;
+                        }
+                    }
+                }
+            }
+
+            foreach (var entry in earnedResources)
+            {
+                double resourceValue = entry.Value;
+                Resource resourcePrice = resourcePrices.FirstOrDefault(rp => rp.NameLog == entry.Key);
+                if (resourcePrice != null)
+                {
+                    //Console.WriteLine($"Resource: {entry.Key} | {RoundToNearestHundred(resourceValue)}");
+                    double roundAmoutRes = RoundToNearestHundred(resourceValue);
+                    double roundedTotalPrice = DivideRoundedToHundred(roundAmoutRes);
+                    double totalPrice = roundedTotalPrice * resourcePrice.Price * 0.9;
+                    //Console.WriteLine($"{entry.Key}: {totalPrice}");
+                    //Console.WriteLine($"Заработок за период с {startDate} по {endDate} для ресурса {entry.Key}: {totalPrice}");
+
+                    ResultProfit result = new ResultProfit(entry.Key, totalPrice);
+
+                    if (!resultProfits.Contains(result))
+                    {
+                        resultProfits.Add(result);
+                    }
+                }
+            }
+
+            foreach(ResultProfit result in resultProfits)
+            {
+                if(result.Profit > 0)
+                    Console.WriteLine($"Resource: {result.Resource} | Profit: {result.Profit}");
+            }
+        }
+
+        static double DivideRoundedToHundred(double number)
+        {
+            return number / 100.0;
+        }
+
+        double RoundToNearestHundred(double number)
+        {
+            return Math.Round(number / 100.0) * 100.0;
+        }
+
+        DateTime ConvertToDate(string dateString)
+        {
+            DateTime date = DateTime.ParseExact(dateString, "yyyy-MM-dd", null);
+            return date;
+        }
+
+        string EngToRu(string res)
         {
             string text = string.Empty;
             foreach(Resource resource in resources)
                 if (res == resource.NameLog)
                     text = resource.NameRu;
+
+            switch (res)
+            {
+                case "freePlayFinish":
+                    text = "Бедлам Окончен";
+                    break;
+                case "victory":
+                    text = "Победа";
+                    break;
+                case "defeat":
+                    text = "Поражение";
+                    break;
+                case "unfinished":
+                    text = "Незакончено";
+                    break;
+                default:
+                    break;
+            }
+
             return text;
         }
 
-        static List<string> FindAndCombineGameData(string filePath, string searchString)
+        List<string> FindAndCombineGameData(string filePath, string searchString)
         {
             List<string> combinedLines = new List<string>();
 
@@ -229,12 +354,11 @@ namespace CrossoutStats
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Ошибка: " + ex.Message);
+                //Console.WriteLine("Ошибка: " + ex.Message);
             }
 
             return combinedLines;
         }
-
 
         private void ReadStatistics(string path)
         {
@@ -253,7 +377,7 @@ namespace CrossoutStats
                         if (timeMatch.Success)
                         {
                             string time = timeMatch.Groups[1].Value;
-                            Console.WriteLine($"Time: {time}");
+                            //Console.WriteLine($"Time: {time}");
 
                             // Используем регулярное выражение для поиска gameResult
                             string gameResultPattern = @"gameResult '([a-zA-Z]+)'";
@@ -261,7 +385,7 @@ namespace CrossoutStats
 
                             string gameResult = string.Empty;
                             string resource = string.Empty;
-                            string countResource = string.Empty;
+                            int countResource = 0;
                             string glory = string.Empty;
                             string score = string.Empty;
                             string expTotal = string.Empty;
@@ -269,7 +393,7 @@ namespace CrossoutStats
                             if (gameResultMatch.Success)
                             {
                                 gameResult = gameResultMatch.Groups[1].Value;
-                                Console.WriteLine($"Game Result: {gameResult}");
+                                //Console.WriteLine($"Game Result: {gameResult}");
 
                                 // Используем регулярное выражение для поиска статистики
                                 string statsPattern = @"([a-zA-Z\s]+) (\d+)";
@@ -279,12 +403,12 @@ namespace CrossoutStats
                                 {
                                     string statName = match.Groups[1].Value.Trim();
                                     int statValue = int.Parse(match.Groups[2].Value);
-                                    Console.WriteLine($"{statName}: {statValue}");
+                                    //Console.WriteLine($"{statName}: {statValue}");
 
 
                                     foreach (Resource _resource in resources)
                                     {
-                                        if (statName == _resource.NameLog) countResource = statValue.ToString();
+                                        if (statName == _resource.NameLog) countResource = statValue;
                                         if (statName == _resource.NameLog) resource = statName;
                                     }
 
@@ -295,7 +419,7 @@ namespace CrossoutStats
                             }
                             else
                             {
-                                Console.WriteLine("No match found for game result.");
+                                //Console.WriteLine("No match found for game result.");
                             }
 
                             string containingFolderName = logFile.Directory.Name;
@@ -305,14 +429,14 @@ namespace CrossoutStats
                         }
                         else
                         {
-                            Console.WriteLine("No match found for time.");
+                            //Console.WriteLine("No match found for time.");
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                label1.Text = ex.Message;
+                //label1.Text = ex.Message;
             }
         }
 
@@ -343,9 +467,6 @@ namespace CrossoutStats
                     case "Медь":
                         textCopper.Text = resource.Price.ToString();
                         break;
-                    case "Бензин":
-                        textPetrol.Text = resource.Price.ToString();
-                        break;
                     case "Пластик":
                         textPlastic.Text = resource.Price.ToString();
                         break;
@@ -368,18 +489,30 @@ namespace CrossoutStats
         }
     }
 
-    class Statistic
+    public class ResultProfit
+    {
+        public string Resource { get; set; }
+        public double Profit { get; set; }
+
+        public ResultProfit(string resource, double profit)
+        {
+            Resource = resource;
+            Profit = profit;
+        }
+    }
+
+    public class Statistic
     {
         public string Date { get; set; }
         public string Time { get; set; }
         public string GameResult { get; set; }
         public string Resource { get; set; }
-        public string CountResource { get; set; }
+        public int CountResource { get; set; }
         public string Score { get; set; }
         public string Exp { get; set; }
         public string Loot { get; set; }
 
-        public Statistic(string date, string time, string gameResult, string resource, string score, string exp, string countResource)
+        public Statistic(string date, string time, string gameResult, string resource, string score, string exp, int countResource)
         {
             Date = date;
             Time = time;
@@ -391,7 +524,7 @@ namespace CrossoutStats
         }
     }
 
-    class Resource
+    public class Resource
     {
         public string NameRu { get; set; }
         public string NameLog { get; set; }
@@ -404,6 +537,20 @@ namespace CrossoutStats
             NameRu = nameRu;
             NameLog = nameLog;
             Url = url;
+        }
+    }
+
+    public class Battle
+    {
+        public string Date { get; }
+        public string Resource { get; }
+        public int ResourceCount { get; }
+
+        public Battle(string date, string resource, int resourceCount)
+        {
+            Date = date;
+            Resource = resource;
+            ResourceCount = resourceCount;
         }
     }
 }

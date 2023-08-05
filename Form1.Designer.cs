@@ -33,7 +33,6 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textScrap = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
@@ -42,10 +41,7 @@
             this.textElectronics = new System.Windows.Forms.TextBox();
             this.textWires = new System.Windows.Forms.TextBox();
             this.textPlastic = new System.Windows.Forms.TextBox();
-            this.textPetrol = new System.Windows.Forms.TextBox();
             this.textCopper = new System.Windows.Forms.TextBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.label9 = new System.Windows.Forms.Label();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.buttonParsePrice = new System.Windows.Forms.Button();
             this.checkBoxUnfinished = new System.Windows.Forms.CheckBox();
@@ -56,7 +52,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(418, 247);
+            this.button1.Location = new System.Drawing.Point(508, 577);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(84, 23);
             this.button1.TabIndex = 0;
@@ -98,15 +94,6 @@
             this.label3.TabIndex = 4;
             this.label3.Text = "Пластик";
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 196);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(56, 16);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "Бензин";
-            // 
             // label5
             // 
             this.label5.AutoSize = true;
@@ -119,7 +106,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(12, 224);
+            this.label6.Location = new System.Drawing.Point(12, 196);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(41, 16);
             this.label6.TabIndex = 7;
@@ -171,41 +158,12 @@
             this.textPlastic.Size = new System.Drawing.Size(105, 22);
             this.textPlastic.TabIndex = 13;
             // 
-            // textPetrol
-            // 
-            this.textPetrol.Location = new System.Drawing.Point(121, 196);
-            this.textPetrol.Name = "textPetrol";
-            this.textPetrol.Size = new System.Drawing.Size(105, 22);
-            this.textPetrol.TabIndex = 14;
-            // 
             // textCopper
             // 
-            this.textCopper.Location = new System.Drawing.Point(121, 224);
+            this.textCopper.Location = new System.Drawing.Point(121, 196);
             this.textCopper.Name = "textCopper";
             this.textCopper.Size = new System.Drawing.Size(105, 22);
             this.textCopper.TabIndex = 15;
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.Items.AddRange(new object[] {
-            "х100",
-            "х1000"});
-            this.comboBox1.Location = new System.Drawing.Point(274, 23);
-            this.comboBox1.MaxDropDownItems = 2;
-            this.comboBox1.MaxLength = 5;
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(84, 24);
-            this.comboBox1.TabIndex = 16;
-            this.comboBox1.Text = "x100";
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(232, 26);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(36, 16);
-            this.label9.TabIndex = 17;
-            this.label9.Text = "Rate";
             // 
             // listBox1
             // 
@@ -232,7 +190,7 @@
             this.checkBoxUnfinished.AutoSize = true;
             this.checkBoxUnfinished.Checked = true;
             this.checkBoxUnfinished.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxUnfinished.Location = new System.Drawing.Point(407, 220);
+            this.checkBoxUnfinished.Location = new System.Drawing.Point(508, 550);
             this.checkBoxUnfinished.Name = "checkBoxUnfinished";
             this.checkBoxUnfinished.Size = new System.Drawing.Size(92, 20);
             this.checkBoxUnfinished.TabIndex = 20;
@@ -244,7 +202,7 @@
             this.checkBoxfreePlayFinish.AutoSize = true;
             this.checkBoxfreePlayFinish.Checked = true;
             this.checkBoxfreePlayFinish.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxfreePlayFinish.Location = new System.Drawing.Point(407, 192);
+            this.checkBoxfreePlayFinish.Location = new System.Drawing.Point(508, 522);
             this.checkBoxfreePlayFinish.Name = "checkBoxfreePlayFinish";
             this.checkBoxfreePlayFinish.Size = new System.Drawing.Size(114, 20);
             this.checkBoxfreePlayFinish.TabIndex = 21;
@@ -256,7 +214,7 @@
             this.checkBoxVictory.AutoSize = true;
             this.checkBoxVictory.Checked = true;
             this.checkBoxVictory.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxVictory.Location = new System.Drawing.Point(407, 138);
+            this.checkBoxVictory.Location = new System.Drawing.Point(508, 468);
             this.checkBoxVictory.Name = "checkBoxVictory";
             this.checkBoxVictory.Size = new System.Drawing.Size(68, 20);
             this.checkBoxVictory.TabIndex = 22;
@@ -268,7 +226,7 @@
             this.checkBoxDefeat.AutoSize = true;
             this.checkBoxDefeat.Checked = true;
             this.checkBoxDefeat.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxDefeat.Location = new System.Drawing.Point(407, 164);
+            this.checkBoxDefeat.Location = new System.Drawing.Point(508, 494);
             this.checkBoxDefeat.Name = "checkBoxDefeat";
             this.checkBoxDefeat.Size = new System.Drawing.Size(67, 20);
             this.checkBoxDefeat.TabIndex = 23;
@@ -279,17 +237,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(543, 624);
+            this.ClientSize = new System.Drawing.Size(934, 624);
             this.Controls.Add(this.checkBoxDefeat);
             this.Controls.Add(this.checkBoxVictory);
             this.Controls.Add(this.checkBoxfreePlayFinish);
             this.Controls.Add(this.checkBoxUnfinished);
             this.Controls.Add(this.buttonParsePrice);
             this.Controls.Add(this.listBox1);
-            this.Controls.Add(this.label9);
-            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.textCopper);
-            this.Controls.Add(this.textPetrol);
             this.Controls.Add(this.textPlastic);
             this.Controls.Add(this.textWires);
             this.Controls.Add(this.textElectronics);
@@ -298,7 +253,6 @@
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textScrap);
             this.Controls.Add(this.label2);
@@ -318,7 +272,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label7;
@@ -328,10 +281,7 @@
         private System.Windows.Forms.TextBox textElectronics;
         private System.Windows.Forms.TextBox textWires;
         private System.Windows.Forms.TextBox textPlastic;
-        private System.Windows.Forms.TextBox textPetrol;
         private System.Windows.Forms.TextBox textCopper;
-        private System.Windows.Forms.ComboBox comboBox1;
-        private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.Button buttonParsePrice;
         private System.Windows.Forms.CheckBox checkBoxUnfinished;
