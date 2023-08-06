@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Security.Policy;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using Newtonsoft.Json;
+using System.Net.Http;
+using System.Data.SQLite;
 using Newtonsoft.Json.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
-
-/*
- * смотри надо делать проверку по времени кста вот шаблон тебе
- */
+using System.Globalization;
+using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace CrossoutStats
 {
@@ -52,16 +46,20 @@ namespace CrossoutStats
 
         enum GameResult { defeat, victory, unfinished, freePlayFinish }
 
-        string playersFileDB = "stat.db";
+        string statsFileDB = "stats.db";
         string templateFileDB = "template.db";
         string gameLog = "game.log";
+        string logs = "Logs";
 
         bool isAllTime = false;
 
+
+        List<Battle> BattlesToDB => ReadBattlesFromDatabase(PathToStatsDB);
+
         string LocalDerictory => AppDomain.CurrentDomain.BaseDirectory;
-
-        string PathToDuplicate => $"{LocalDerictory}\\Logs";
-
+        string PathToDuplicate => $"{LocalDerictory}\\{logs}";
+        string PathToTemplateDB => $"{LocalDerictory}\\{templateFileDB}";
+        string PathToStatsDB => $"{LocalDerictory}\\{statsFileDB}";
         string PathToLogsFile => Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\My Games\Crossout\logs\";
 
         public Form1()
@@ -225,7 +223,7 @@ namespace CrossoutStats
                 {
                     if (statistic.Resource != string.Empty)
                     {
-                        Battle battl = new Battle(statistic.Date, statistic.Resource, statistic.CountResource);
+                        Battle battl = new Battle(statistic.Date, statistic.Time, statistic.Resource, statistic.CountResource);
                         if (!battles.Contains(battl))
                         {
                             battles.Add(battl);
@@ -233,23 +231,110 @@ namespace CrossoutStats
                     }
                 }
             }
-
-            DateTime now = DateTime.Now;
-            DateTime today = DateTime.Today.Date;
-            DateTime oneWeekAgo = today.AddDays(-7).Date;
-            DateTime oneMonthAgo = today.AddMonths(-1).Date;
-
-            
-            
         }
 
+        void DuplicateDB()
+        {
+            try
+            {
+                if (!File.Exists(PathToStatsDB))
+                {
+                    File.Copy(PathToTemplateDB, PathToStatsDB);
+                }
+            }
+            catch { }
+        }
+
+        void InsertBattlesIntoDatabase(List<Battle> battles, string dbPath)
+        {
+            using (var connection = new SQLiteConnection($"Data Source={dbPath};Version=3;"))
+            {
+                connection.Open();
+
+                string insertQuery = @"INSERT INTO Battles (Date, Time, Resource, ResourceCount) VALUES (@Date, @Time, @Resource, @ResourceCount)";
+
+                using (var command = new SQLiteCommand(insertQuery, connection))
+                {
+                    command.Parameters.Add(new SQLiteParameter("@Date"));
+                    command.Parameters.Add(new SQLiteParameter("@Time"));
+                    command.Parameters.Add(new SQLiteParameter("@Resource"));
+                    command.Parameters.Add(new SQLiteParameter("@ResourceCount"));
+
+                    foreach (var battle in battles)
+                    {
+                        if (!IsDuplicateEntry(connection, battle))
+                        {
+                            command.Parameters["@Date"].Value = battle.Date;
+                            command.Parameters["@Time"].Value = battle.Time;
+                            command.Parameters["@Resource"].Value = battle.Resource;
+                            command.Parameters["@ResourceCount"].Value = battle.ResourceCount;
+
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
+                    Console.WriteLine("Данные успешно записаны в таблицу 'Battles'");
+                }
+            }
+        }
+
+        bool IsDuplicateEntry(SQLiteConnection connection, Battle battle)
+        {
+            string selectQuery = "SELECT COUNT(*) FROM Battles WHERE Date = @Date AND Time = @Time AND Resource = @Resource AND ResourceCount = @ResourceCount";
+
+            using (var command = new SQLiteCommand(selectQuery, connection))
+            {
+                command.Parameters.Add(new SQLiteParameter("@Date", battle.Date));
+                command.Parameters.Add(new SQLiteParameter("@Time", battle.Time));
+                command.Parameters.Add(new SQLiteParameter("@Resource", battle.Resource));
+                command.Parameters.Add(new SQLiteParameter("@ResourceCount", battle.ResourceCount));
+
+                int count = Convert.ToInt32(command.ExecuteScalar());
+
+                return count > 0;
+            }
+        }
+
+        List<Battle> ReadBattlesFromDatabase(string dbPath)
+        {
+            List<Battle> battles = new List<Battle>();
+
+            using (var connection = new SQLiteConnection($"Data Source={dbPath};Version=3;"))
+            {
+                connection.Open();
+
+                string selectQuery = "SELECT Date, Time, Resource, ResourceCount FROM Battles";
+
+                using (var command = new SQLiteCommand(selectQuery, connection))
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        string date = reader.GetString(0);
+                        string time = reader.GetString(1);
+                        string resource = reader.GetString(2);
+                        int resourceCount = reader.GetInt32(3);
+
+                        Battle battle = new Battle(date, time, resource, resourceCount);
+
+                        if (!battles.Contains(battle))
+                            battles.Add(battle);
+                    }
+                }
+            }
+
+            return battles;
+        }
 
         private void button2_Click(object sender, EventArgs e)
         {
             battles.Clear();
             statistics.Clear();
             resultProfits.Clear();
-            
+
+            DuplicateDB();
+
+
             DeleteFolderRecursively(PathToDuplicate);
             DuplicateFolders(PathToLogsFile, PathToDuplicate);
             
@@ -263,7 +348,7 @@ namespace CrossoutStats
                 {
                     if (statistic.Resource != string.Empty)
                     {
-                        Battle battl = new Battle(statistic.Date, statistic.Resource, statistic.CountResource);
+                        Battle battl = new Battle(statistic.Date, statistic.Time, statistic.Resource, statistic.CountResource);
                         if (!battles.Contains(battl))
                         {
                             battles.Add(battl);
@@ -271,21 +356,13 @@ namespace CrossoutStats
                     }
                 }
             }
-            
-            DateTime now = DateTime.Now;
-            DateTime today = DateTime.Today.Date;
-            DateTime oneWeekAgo = today.AddDays(-7).Date;
-            DateTime oneMonthAgo = today.AddMonths(-1).Date;
 
-
+            InsertBattlesIntoDatabase(battles, PathToStatsDB);
 
             dataGridView1.DataSource = null;
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.AllowUserToDeleteRows = false;
-            for (int i = 0; i < dataGridView1.Rows.Count; i++)
-            {
-                dataGridView1.Rows.Remove(dataGridView1.Rows[0]);
-            }
+            for (int i = 0; i < dataGridView1.Rows.Count; i++) dataGridView1.Rows.Remove(dataGridView1.Rows[0]);
             dataGridView1.Rows.Clear();
             dataGridView1.Columns.Clear();
             dataGridView1.Refresh();
@@ -296,11 +373,8 @@ namespace CrossoutStats
 
             double profit = 0;
             List<string> columnValues = new List<string>();
-            foreach (DataGridViewRow row in dataGridView1.Rows)
-            {
-                if (row.Cells.Count > 4) columnValues.Add(row.Cells[4].Value.ToString());
-            }
-            foreach(string collum in columnValues)
+            foreach (DataGridViewRow row in dataGridView1.Rows) if (row.Cells.Count > 4) columnValues.Add(row.Cells[4].Value.ToString());
+            foreach (string collum in columnValues)
             {
                 if(collum != "0")
                     profit += Convert.ToDouble(collum);
@@ -325,12 +399,12 @@ namespace CrossoutStats
             dataGridView1.Columns.Add("Total", "Год");
 
             // Добавьте строки с данными
-            dataGridView1.Rows.Add("Металлолом",   CalculateEarnings(Scrap.NameLog, battles, resources, today, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneYearAgo, now));
-            dataGridView1.Rows.Add("Пластик",      CalculateEarnings(Plastic.NameLog, battles, resources, today, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneYearAgo, now));
-            dataGridView1.Rows.Add("Медь",         CalculateEarnings(Copper.NameLog, battles, resources, today, now), CalculateEarnings(Copper.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Copper.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Copper.NameLog, battles, resources, oneYearAgo, now));
-            dataGridView1.Rows.Add("Электроника",  CalculateEarnings(Electronics.NameLog, battles, resources, today, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneYearAgo, now));
-            dataGridView1.Rows.Add("Провода",      CalculateEarnings(Wires.NameLog, battles, resources, today, now), CalculateEarnings(Wires.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Wires.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Wires.NameLog, battles, resources, oneYearAgo, now));
-            dataGridView1.Rows.Add("Аккумуляторы", CalculateEarnings(Accumulator.NameLog, battles, resources, today, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Металлолом",   CalculateEarnings(Scrap.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Scrap.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Scrap.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Scrap.NameLog, BattlesToDB, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Пластик",      CalculateEarnings(Plastic.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Plastic.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Plastic.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Plastic.NameLog, BattlesToDB, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Медь",         CalculateEarnings(Copper.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Copper.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Copper.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Copper.NameLog, BattlesToDB, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Электроника",  CalculateEarnings(Electronics.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Electronics.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Electronics.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Electronics.NameLog, BattlesToDB, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Провода",      CalculateEarnings(Wires.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Wires.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Wires.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Wires.NameLog, BattlesToDB, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Аккумуляторы", CalculateEarnings(Accumulator.NameLog, BattlesToDB, resources, today, now), CalculateEarnings(Accumulator.NameLog, BattlesToDB, resources, oneWeekAgo, now), CalculateEarnings(Accumulator.NameLog, BattlesToDB, resources, oneMonthAgo, now), CalculateEarnings(Accumulator.NameLog, BattlesToDB, resources, oneYearAgo, now));
         }
 
         double CalculateEarnings(string nameRes, List<Battle> battles, List<Resource> resourcePrices, DateTime startDate, DateTime endDate, bool allTimes = true)
@@ -397,12 +471,6 @@ namespace CrossoutStats
             return Math.Round(number / 100.0) * 100.0;
         }
 
-        DateTime ConvertStringToDate(string dateString)
-        {
-            DateTime date = DateTime.ParseExact(dateString, "yyyy-MM-dd", null);
-            return date;
-        }
-
         string EngToRu(string res)
         {
             string text = string.Empty;
@@ -448,9 +516,9 @@ namespace CrossoutStats
                     }
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                //Console.WriteLine("Ошибка: " + ex.Message);
+
             }
 
             return combinedLines;
@@ -461,7 +529,7 @@ namespace CrossoutStats
             try
             {
                 DirectoryInfo logsDirectory = new DirectoryInfo(path);
-                FileInfo[] logFiles = logsDirectory.GetFiles("game.log", SearchOption.AllDirectories);
+                FileInfo[] logFiles = logsDirectory.GetFiles(gameLog, SearchOption.AllDirectories);
 
                 foreach (FileInfo logFile in logFiles)
                 {
@@ -533,10 +601,7 @@ namespace CrossoutStats
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                //label1.Text = ex.Message;
-            }
+            catch { }
         }
 
         static DateTime ExtractDate(string input)
@@ -644,13 +709,15 @@ namespace CrossoutStats
 
     public class Battle
     {
-        public string Date { get; }
-        public string Resource { get; }
-        public int ResourceCount { get; }
+        public string Date { get; set; }
+        public string Time { get; set; }
+        public string Resource { get; set; }
+        public int ResourceCount { get; set; }
 
-        public Battle(string date, string resource, int resourceCount)
+        public Battle(string date, string time, string resource, int resourceCount)
         {
             Date = date;
+            Time = time;
             Resource = resource;
             ResourceCount = resourceCount;
         }
