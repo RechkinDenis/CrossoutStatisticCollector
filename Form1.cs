@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
 
 /*
  * смотри надо делать проверку по времени кста вот шаблон тебе
@@ -21,13 +22,13 @@ namespace CrossoutStats
 
     public partial class Form1 : Form
     {
-        static Resource Scrap = new Resource("Металлолом", "Scrap_Common", "https://crossoutdb.com/api/v1/item/53");
-        static Resource Wires = new Resource("Провода", "Scrap_Rare", "https://crossoutdb.com/api/v1/item/85");
+        static Resource Scrap = new Resource("Металлолом", "Common", "https://crossoutdb.com/api/v1/item/53");
+        static Resource Wires = new Resource("Провода", "Rare", "https://crossoutdb.com/api/v1/item/85");
         static Resource Copper = new Resource("Медь", "Platinum", "https://crossoutdb.com/api/v1/item/43");
         static Resource Petrol = new Resource("Бензин", "ResourcePack_Gasoline5", "https://crossoutdb.com/api/v1/item/106");
         static Resource Plastic = new Resource("Пластик", "Plastic", "https://crossoutdb.com/api/v1/item/785");
         static Resource Accumulator = new Resource("Аккумуляторы", "Accumulators", "https://crossoutdb.com/api/v1/item/784");
-        static Resource Electronics = new Resource("Электроника", "Scrap_Epic", "https://crossoutdb.com/api/v1/item/168");
+        static Resource Electronics = new Resource("Электроника", "Epic", "https://crossoutdb.com/api/v1/item/168");
 
         private List<Resource> resources = new List<Resource>() {
             new Resource("Металлолом", "Common", "https://crossoutdb.com/api/v1/item/53"),
@@ -40,12 +41,12 @@ namespace CrossoutStats
         };
 
         List<Battle> battles = new List<Battle>();
+        List<Statistic> statistics = new List<Statistic>();
         List<ResultProfit> resultProfits = new List<ResultProfit>();
 
         string lootGasoline5 = "ResourcePack_Gasoline5";
         string lootGasoline10 = "ResourcePack_Gasoline10";
 
-        List<Statistic> statistics = new List<Statistic>();
 
         double commission = 0.1;// Процент с продажи на рынке
 
@@ -54,6 +55,8 @@ namespace CrossoutStats
         string playersFileDB = "stat.db";
         string templateFileDB = "template.db";
         string gameLog = "game.log";
+
+        bool isAllTime = false;
 
         string LocalDerictory => AppDomain.CurrentDomain.BaseDirectory;
 
@@ -161,13 +164,8 @@ namespace CrossoutStats
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        void LoadToListBox()
         {
-            DeleteFolderRecursively(PathToDuplicate);
-            DuplicateFolders(PathToLogsFile, PathToDuplicate);
-
-            ReadStatistics(PathToDuplicate);
-
             listBox1.Items.Clear();
             foreach (Statistic statistic in statistics)
             {
@@ -206,7 +204,22 @@ namespace CrossoutStats
                 }
             }
 
-            foreach(Statistic statistic in statistics)
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            battles.Clear();
+            statistics.Clear();
+            resultProfits.Clear();
+
+            DeleteFolderRecursively(PathToDuplicate);
+            DuplicateFolders(PathToLogsFile, PathToDuplicate);
+
+            ReadStatistics(PathToDuplicate);
+
+            LoadToListBox();
+
+            foreach (Statistic statistic in statistics)
             {
                 if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
                 {
@@ -220,36 +233,125 @@ namespace CrossoutStats
                     }
                 }
             }
-            double countRes = 0.0;
-            foreach (Battle battle in battles)
-            {
-                countRes += battle.ResourceCount;
-            }
 
-            DateTime startDate = DateTime.Parse("2023-08-01");
-            DateTime endDate = DateTime.Parse("2023-08-05");
+            DateTime now = DateTime.Now;
+            DateTime today = DateTime.Today.Date;
+            DateTime oneWeekAgo = today.AddDays(-7).Date;
+            DateTime oneMonthAgo = today.AddMonths(-1).Date;
 
-            CalculateEarnings(battles, resources, startDate, endDate);
-
-            //Console.WriteLine(countRes.ToString());
+            
+            
         }
 
-        void CalculateEarnings(List<Battle> battles, List<Resource> resourcePrices, DateTime startDate, DateTime endDate)
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            battles.Clear();
+            statistics.Clear();
+            resultProfits.Clear();
+            
+            DeleteFolderRecursively(PathToDuplicate);
+            DuplicateFolders(PathToLogsFile, PathToDuplicate);
+            
+            ReadStatistics(PathToDuplicate);
+            
+            LoadToListBox();
+            
+            foreach (Statistic statistic in statistics)
+            {
+                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
+                {
+                    if (statistic.Resource != string.Empty)
+                    {
+                        Battle battl = new Battle(statistic.Date, statistic.Resource, statistic.CountResource);
+                        if (!battles.Contains(battl))
+                        {
+                            battles.Add(battl);
+                        }
+                    }
+                }
+            }
+            
+            DateTime now = DateTime.Now;
+            DateTime today = DateTime.Today.Date;
+            DateTime oneWeekAgo = today.AddDays(-7).Date;
+            DateTime oneMonthAgo = today.AddMonths(-1).Date;
+
+
+
+            dataGridView1.DataSource = null;
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                dataGridView1.Rows.Remove(dataGridView1.Rows[0]);
+            }
+            dataGridView1.Rows.Clear();
+            dataGridView1.Columns.Clear();
+            dataGridView1.Refresh();
+
+            ParsePriceAndName();
+
+            CreateGrid();
+
+            double profit = 0;
+            List<string> columnValues = new List<string>();
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.Cells.Count > 4) columnValues.Add(row.Cells[4].Value.ToString());
+            }
+            foreach(string collum in columnValues)
+            {
+                if(collum != "0")
+                    profit += Convert.ToDouble(collum);
+            }
+
+            label9.Text = $"Profit: {profit.ToString("0.0")}";
+        }
+
+        void CreateGrid()
+        {
+            DateTime now = DateTime.Now;
+            DateTime today = DateTime.Today.Date;
+            DateTime oneWeekAgo = today.AddDays(-7).Date;
+            DateTime oneMonthAgo = today.AddMonths(-1).Date;
+            DateTime oneYearAgo = today.AddYears(-1).Date;
+
+            // Добавьте столбцы (первая колонка - ресурс, остальные - дни, неделя, месяц, за всё время)
+            dataGridView1.Columns.Add("Resource", "Ресурс");
+            dataGridView1.Columns.Add("Day", "День");
+            dataGridView1.Columns.Add("Week", "Неделя");
+            dataGridView1.Columns.Add("Month", "Месяц");
+            dataGridView1.Columns.Add("Total", "Год");
+
+            // Добавьте строки с данными
+            dataGridView1.Rows.Add("Металлолом",   CalculateEarnings(Scrap.NameLog, battles, resources, today, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Scrap.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Пластик",      CalculateEarnings(Plastic.NameLog, battles, resources, today, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Plastic.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Медь",         CalculateEarnings(Copper.NameLog, battles, resources, today, now), CalculateEarnings(Copper.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Copper.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Copper.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Электроника",  CalculateEarnings(Electronics.NameLog, battles, resources, today, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Electronics.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Провода",      CalculateEarnings(Wires.NameLog, battles, resources, today, now), CalculateEarnings(Wires.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Wires.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Wires.NameLog, battles, resources, oneYearAgo, now));
+            dataGridView1.Rows.Add("Аккумуляторы", CalculateEarnings(Accumulator.NameLog, battles, resources, today, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneWeekAgo, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneMonthAgo, now), CalculateEarnings(Accumulator.NameLog, battles, resources, oneYearAgo, now));
+        }
+
+        double CalculateEarnings(string nameRes, List<Battle> battles, List<Resource> resourcePrices, DateTime startDate, DateTime endDate, bool allTimes = true)
         {
             Dictionary<string, double> earnedResources = new Dictionary<string, double>();
-
+            earnedResources.Clear();
+        
             foreach (Battle battle in battles)
             {
                 DateTime battleDate = DateTime.Parse(battle.Date);
-
+        
                 if (battleDate >= startDate && battleDate <= endDate)
                 {
                     Resource resourcePrice = resourcePrices.FirstOrDefault(rp => rp.NameLog == battle.Resource);
                     if (resourcePrice != null)
                     {
-                        double resourceValue = battle.ResourceCount;
-                        double roundedValue = Math.Round(resourceValue, 2, MidpointRounding.ToEven);
-
+                        double resourceValue = 0;
+                        resourceValue = battle.ResourceCount;
+                        double roundedValue = 0;
+                        roundedValue = Math.Round(resourceValue, 2, MidpointRounding.ToEven);
+        
                         if (earnedResources.ContainsKey(battle.Resource))
                         {
                             earnedResources[battle.Resource] += roundedValue;
@@ -262,33 +364,27 @@ namespace CrossoutStats
                 }
             }
 
+            double ret = 0;
+
             foreach (var entry in earnedResources)
             {
                 double resourceValue = entry.Value;
                 Resource resourcePrice = resourcePrices.FirstOrDefault(rp => rp.NameLog == entry.Key);
                 if (resourcePrice != null)
                 {
-                    //Console.WriteLine($"Resource: {entry.Key} | {RoundToNearestHundred(resourceValue)}");
                     double roundAmoutRes = RoundToNearestHundred(resourceValue);
                     double roundedTotalPrice = DivideRoundedToHundred(roundAmoutRes);
                     double totalPrice = roundedTotalPrice * resourcePrice.Price * 0.9;
-                    //Console.WriteLine($"{entry.Key}: {totalPrice}");
-                    //Console.WriteLine($"Заработок за период с {startDate} по {endDate} для ресурса {entry.Key}: {totalPrice}");
-
-                    ResultProfit result = new ResultProfit(entry.Key, totalPrice);
-
-                    if (!resultProfits.Contains(result))
+        
+                    if(entry.Key == nameRes)
                     {
-                        resultProfits.Add(result);
+                        ret = totalPrice;
+                        break;
                     }
                 }
             }
 
-            foreach(ResultProfit result in resultProfits)
-            {
-                if(result.Profit > 0)
-                    Console.WriteLine($"Resource: {result.Resource} | Profit: {result.Profit}");
-            }
+            return ret;
         }
 
         static double DivideRoundedToHundred(double number)
@@ -301,7 +397,7 @@ namespace CrossoutStats
             return Math.Round(number / 100.0) * 100.0;
         }
 
-        DateTime ConvertToDate(string dateString)
+        DateTime ConvertStringToDate(string dateString)
         {
             DateTime date = DateTime.ParseExact(dateString, "yyyy-MM-dd", null);
             return date;
@@ -425,7 +521,10 @@ namespace CrossoutStats
                             string containingFolderName = logFile.Directory.Name;
                             DateTime date = ExtractDate(containingFolderName);
                             Statistic statistic = new Statistic(date.ToString("yyyy-MM-dd"), time, gameResult, resource, score, expTotal, countResource);
-                            statistics.Add(statistic);
+                            if (!statistics.Contains(statistic))
+                            {
+                                statistics.Add(statistic);
+                            }
                         }
                         else
                         {
@@ -492,11 +591,14 @@ namespace CrossoutStats
     public class ResultProfit
     {
         public string Resource { get; set; }
+
+        public uint ResourceCount { get; set; }
         public double Profit { get; set; }
 
-        public ResultProfit(string resource, double profit)
+        public ResultProfit(string resource, uint resourceCount, double profit)
         {
             Resource = resource;
+            ResourceCount = resourceCount;
             Profit = profit;
         }
     }
