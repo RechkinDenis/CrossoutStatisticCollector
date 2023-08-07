@@ -200,7 +200,7 @@ namespace CrossoutStats
 
             foreach (Statistic statistic in statistics)
             {
-                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
+                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())
                 {
                     if (statistic.Resource != string.Empty)
                     {
@@ -214,7 +214,7 @@ namespace CrossoutStats
             }
         }
 
-        void DuplicateDB()
+        void CopyTemplateDB()
         {
             try
             {
@@ -259,8 +259,6 @@ namespace CrossoutStats
                             command.ExecuteNonQuery();
                         }
                     }
-
-                    Console.WriteLine("Данные успешно записаны в таблицу 'Statistics'");
                 }
             }
         }
@@ -323,7 +321,7 @@ namespace CrossoutStats
             battles.Clear();
             statistics.Clear();
 
-            DuplicateDB();
+            CopyTemplateDB();
 
 
             DeleteFolderRecursively(PathToDuplicate);
