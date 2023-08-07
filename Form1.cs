@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Data.SqlTypes;
 
 namespace CrossoutStats
 {
@@ -186,10 +187,13 @@ namespace CrossoutStats
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private async void button2_Click(object sender, EventArgs e)
         {
             battles.Clear();
             statistics.Clear();
+
+            CopyTemplateDB();
+
 
             DeleteFolderRecursively(PathToDuplicate);
             DuplicateFolders(PathToLogsFile, PathToDuplicate);
@@ -200,7 +204,7 @@ namespace CrossoutStats
 
             foreach (Statistic statistic in statistics)
             {
-                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())
+                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
                 {
                     if (statistic.Resource != string.Empty)
                     {
@@ -212,6 +216,74 @@ namespace CrossoutStats
                     }
                 }
             }
+
+            InsertBattlesIntoDatabase(statistics, PathToStatsDB);
+
+            dataGridView1.DataSource = null;
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
+            for (int i = 0; i < dataGridView1.Rows.Count; i++) dataGridView1.Rows.Remove(dataGridView1.Rows[0]);
+            dataGridView1.Rows.Clear();
+            dataGridView1.Columns.Clear();
+            dataGridView1.Refresh();
+
+            await ParsePriceAndName();
+
+            CreateGrid();
+
+            double profit = 0;
+            List<string> columnValues = new List<string>();
+            foreach (DataGridViewRow row in dataGridView1.Rows) if (row.Cells.Count > 4) columnValues.Add(row.Cells[4].Value.ToString());
+            foreach (string collum in columnValues)
+            {
+                if (collum != "0")
+                    profit += Convert.ToDouble(collum);
+            }
+
+            label9.Text = $"Profit: {profit.ToString("0.0")}";
+
+            //calculation of averages and ratio
+            List<int> score = new List<int>();
+            List<int> exp = new List<int>();
+            foreach (Statistic statistic in StatisticsToDB)
+            {
+                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString() && Convert.ToInt32(statistic.Score) > 0 && Convert.ToInt32(statistic.Exp) > 0)
+                {
+                    int _score = 0;
+                    int _exp = 0;
+
+                    if (Convert.ToInt32(statistic.Score) > 0)
+                        _score = Convert.ToInt32(statistic.Score);
+                    if (Convert.ToInt32(statistic.Exp) > 0)
+                        _exp = Convert.ToInt32(statistic.Exp);
+
+                    //---------
+
+                    if (!score.Contains(_score)) score.Add(_score);
+                    if (!exp.Contains(_exp)) exp.Add(_exp);
+                }
+            }
+
+            int d = 0;
+            int v = 0;
+            foreach (Statistic statistic in StatisticsToDB)
+            {
+                if (statistic.GameResult != GameResult.freePlayFinish.ToString() && statistic.GameResult != GameResult.unfinished.ToString())
+                {
+                    if (statistic.GameResult == GameResult.victory.ToString())
+                    {
+                        v++;
+                    }
+                    else
+                    {
+                        d++;
+                    }
+                }
+            }
+            labelVD.Text = $"V: {v} | D: {d}";
+            labelRvd.Text = $"rV: {((double)v / d).ToString("0.00")}";
+            labelScore.Text = $"Score: {score.Average().ToString("0.00")}";
+            labelExp.Text = $"Exp: {exp.Average().ToString("0.00")}";
         }
 
         void CopyTemplateDB()
@@ -314,62 +386,6 @@ namespace CrossoutStats
                 }
             }
             return statistics;
-        }
-
-        private async void button2_Click(object sender, EventArgs e)
-        {
-            battles.Clear();
-            statistics.Clear();
-
-            CopyTemplateDB();
-
-
-            DeleteFolderRecursively(PathToDuplicate);
-            DuplicateFolders(PathToLogsFile, PathToDuplicate);
-            
-            ReadStatistics(PathToDuplicate);
-            
-            LoadToListBox();
-            
-            foreach (Statistic statistic in statistics)
-            {
-                if (statistic.GameResult != GameResult.unfinished.ToString() && statistic.GameResult != GameResult.freePlayFinish.ToString())// && statistic.Resource == "Plastic"
-                {
-                    if (statistic.Resource != string.Empty)
-                    {
-                        Battle battl = new Battle(statistic.Date, statistic.Time, statistic.Resource, statistic.CountResource);
-                        if (!battles.Contains(battl))
-                        {
-                            battles.Add(battl);
-                        }
-                    }
-                }
-            }
-
-            InsertBattlesIntoDatabase(statistics, PathToStatsDB);
-
-            dataGridView1.DataSource = null;
-            dataGridView1.AllowUserToAddRows = false;
-            dataGridView1.AllowUserToDeleteRows = false;
-            for (int i = 0; i < dataGridView1.Rows.Count; i++) dataGridView1.Rows.Remove(dataGridView1.Rows[0]);
-            dataGridView1.Rows.Clear();
-            dataGridView1.Columns.Clear();
-            dataGridView1.Refresh();
-
-            await ParsePriceAndName();
-
-            CreateGrid();
-
-            double profit = 0;
-            List<string> columnValues = new List<string>();
-            foreach (DataGridViewRow row in dataGridView1.Rows) if (row.Cells.Count > 4) columnValues.Add(row.Cells[4].Value.ToString());
-            foreach (string collum in columnValues)
-            {
-                if(collum != "0")
-                    profit += Convert.ToDouble(collum);
-            }
-
-            label9.Text = $"Profit: {profit.ToString("0.0")}";
         }
 
         void CreateGrid()

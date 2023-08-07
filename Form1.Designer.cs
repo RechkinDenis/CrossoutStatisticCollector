@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
-            this.button1 = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.textScrap = new System.Windows.Forms.TextBox();
@@ -52,18 +51,12 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.button2 = new System.Windows.Forms.Button();
             this.label9 = new System.Windows.Forms.Label();
+            this.labelVD = new System.Windows.Forms.Label();
+            this.labelRvd = new System.Windows.Forms.Label();
+            this.labelScore = new System.Windows.Forms.Label();
+            this.labelExp = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(508, 577);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(84, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Battle Stats";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // label1
             // 
@@ -268,11 +261,51 @@
             this.label9.TabIndex = 27;
             this.label9.Text = "Profit: 0";
             // 
+            // labelVD
+            // 
+            this.labelVD.AutoSize = true;
+            this.labelVD.Location = new System.Drawing.Point(511, 317);
+            this.labelVD.Name = "labelVD";
+            this.labelVD.Size = new System.Drawing.Size(56, 16);
+            this.labelVD.TabIndex = 28;
+            this.labelVD.Text = "labelVD";
+            // 
+            // labelRvd
+            // 
+            this.labelRvd.AutoSize = true;
+            this.labelRvd.Location = new System.Drawing.Point(511, 333);
+            this.labelRvd.Name = "labelRvd";
+            this.labelRvd.Size = new System.Drawing.Size(51, 16);
+            this.labelRvd.TabIndex = 29;
+            this.labelRvd.Text = "label10";
+            // 
+            // labelScore
+            // 
+            this.labelScore.AutoSize = true;
+            this.labelScore.Location = new System.Drawing.Point(511, 374);
+            this.labelScore.Name = "labelScore";
+            this.labelScore.Size = new System.Drawing.Size(51, 16);
+            this.labelScore.TabIndex = 30;
+            this.labelScore.Text = "label11";
+            // 
+            // labelExp
+            // 
+            this.labelExp.AutoSize = true;
+            this.labelExp.Location = new System.Drawing.Point(511, 390);
+            this.labelExp.Name = "labelExp";
+            this.labelExp.Size = new System.Drawing.Size(51, 16);
+            this.labelExp.TabIndex = 31;
+            this.labelExp.Text = "label12";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(874, 624);
+            this.Controls.Add(this.labelExp);
+            this.Controls.Add(this.labelScore);
+            this.Controls.Add(this.labelRvd);
+            this.Controls.Add(this.labelVD);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.dataGridView1);
@@ -295,7 +328,6 @@
             this.Controls.Add(this.textScrap);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.button1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.Text = "Statistics And Сalculator";
@@ -307,8 +339,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
@@ -331,6 +361,10 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label labelVD;
+        private System.Windows.Forms.Label labelRvd;
+        private System.Windows.Forms.Label labelScore;
+        private System.Windows.Forms.Label labelExp;
     }
 }
 
